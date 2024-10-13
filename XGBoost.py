@@ -1,12 +1,3 @@
-'''
-python code to combined multiply files
-From: Kang Hu, Nanjing University of Information Science and Technology, Hong Liao group
-Author: Kang Hu, NUIST
-Written: 2024-04-11
-Version 1.0
-email: 200060@nuist.edu.cn
-'''
-
 import xgboost as xgb
 import pandas as pd
 import numpy as np
@@ -17,10 +8,10 @@ import statsmodels.api as sm
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------- |
-file_path_training1 = '/Volumes/HK/Team_Group/Sihan/output70percent.csv' 
-file_path_testining1 = '/Volumes/HK/Team_Group/Sihan/output30percent.csv'  
-file_out1 = '/Volumes/HK/Team_Group/Sihan/XGBoost-total-PM1.csv'  
-trainModel_path1 = '/Volumes/HK/Team_Group/Sihan/output-Residual.m'
+file_path_training1 = '' 
+file_path_testining1 = ''  
+file_out1 = ''  
+trainModel_path1 = ''
 #-----------------------------------------------------------------------------------------------------------------------------------------|
 
 
@@ -150,4 +141,4 @@ def XGBoost_predicting():
 
 
 if __name__ == '__main__':
-    XGBoost_predicting()
+    XGBoost_training()
