@@ -21,20 +21,66 @@ trainModel_path1 = ''
 ----------------------------------------------------------------------------------------------------------------------------------------
 '''
 
-def XGBoost_train_cal(file_path_training, file_path_testining,file_out, trainModel_path):
+def XGBoost_train_cal(file_path_training, file_out, trainModel_path, test_size):
     f = open(file_out, 'w')
 
-    DataTime, trainingData_X, trainingData_Y, testData_X, testData_Y = Data_read(file_path_training, file_path_testining)
+    data_training = pd.read_csv(file_path_training, sep=',', low_memory=False)  ###pandas读取数据，按照,间隔
+    data_training.replace('NAN', np.nan, inplace=True)  ###将Igor的NAN值替换成pandas的NaN
+    data_training.dropna(axis=0, how='any', inplace=True)
+    num_column = data_training.shape[1]  ###数据列数
 
-    model = XGBRegressor(learning_rate= 0.1,     
-                         n_estimators=1000,
-                         max_depth=11,
-                         min_child_weight=3,
+    column_names = data_training.columns.tolist()[1:-1]
+
+    trainingData_X = pd.DataFrame(columns = range(num_column-2))
+    trainingData_X = pd.DataFrame(trainingData_X, columns=column_names)
+
+    testingData_X = pd.DataFrame(columns = range(num_column-2))
+    testingData_X = pd.DataFrame(testingData_X, columns=column_names)
+
+    #trainingData_Y = pd.Series().astype(float)
+    #testingData_Y = pd.Series().astype(float)
+    trainingData_Y = pd.DataFrame()
+    testingData_Y = pd.DataFrame()
+
+    m = 0
+
+    for i in range(5):
+        #random_number = random.randint(1, 100)
+        #trainingData_X_temp, testingData_X_temp, trainingData_Y_temp, testingData_Y_temp = train_test_split(trainingData_X_original, trainingData_Y_original, test_size = test_size, random_state = random_number)
+
+        num = int(data_training.shape[0] * test_size)
+
+        n = num * (i + 1)
+        testingData_temp = data_training.iloc[m:n, :].copy()
+        trainingData_merge = data_training.merge(testingData_temp, how = 'left', indicator = True)
+        trainingData_temp = trainingData_merge[trainingData_merge['_merge'] == 'left_only'].drop(columns = ['_merge'])
+
+
+        trainingData_X_temp = trainingData_temp.iloc[:, 1:num_column - 1].copy()  
+        trainingData_Y_temp = trainingData_temp.iloc[:, -1].copy()
+        testingData_X_temp = testingData_temp.iloc[:, 1:num_column - 1].copy()  
+        testingData_Y_temp = testingData_temp.iloc[:, -1].copy()
+        DataTime = testingData_temp.iloc[:, 0].copy()
+
+        trainingData_Y_temp = trainingData_Y_temp.to_frame()
+        testingData_Y_temp = testingData_Y_temp.to_frame()
+
+        trainingData_X = trainingData_X._append(trainingData_X_temp, ignore_index=True)
+        testingData_X = testingData_X._append(testingData_X_temp, ignore_index=True)
+        trainingData_Y = trainingData_Y._append(trainingData_Y_temp, ignore_index=True)
+        testingData_Y = testingData_Y._append(testingData_Y_temp, ignore_index=True)
+
+        m = n + 1
+
+    model = XGBRegressor(learning_rate= 0.01,      
+                         n_estimators=2508,
+                         max_depth=9,
+                         min_child_weight=1,
                          gamma=0.1,
-                         colsample_bytree=0.8,
+                         colsample_bytree=0.6,
                          subsample=0.6,
-                         reg_alpha=0.085,
-                         reg_lambda=50,
+                         reg_alpha=400,
+                         reg_lambda= 1,
                          nthread=4,
                          scale_pos_weight=1,
                          objective = 'reg:squarederror',
@@ -42,7 +88,6 @@ def XGBoost_train_cal(file_path_training, file_path_testining,file_out, trainMod
                          seed=27,
                          booster='gbtree',
     )
-
 
     model.fit(trainingData_X.astype(float),trainingData_Y.astype(float))
 
@@ -55,12 +100,12 @@ def XGBoost_train_cal(file_path_training, file_path_testining,file_out, trainMod
     f.write(fet_imp)
     f.write('\n')
 
-    res = model.predict(testData_X.astype(float))
+    res = model.predict(testingData_X.astype(float))
 
     Y = res
-    X = testData_Y.astype(float)
+    X = pd.Series(testingData_Y[data_training.columns.tolist()[-1]].values).astype(float)
     Y = pd.Series(Y).astype(float)
-    X = pd.Series(X).astype(float)
+    #X = pd.Series(X).astype(float)
     Y = Y.reset_index(drop=True)
     Y = pd.concat([Y], axis=1)
     X = X.reset_index(drop=True)
@@ -73,15 +118,16 @@ def XGBoost_train_cal(file_path_training, file_path_testining,file_out, trainMod
 
     data_res = []  # Transfer list data to eval
     pre_res = list(res)
-    data1_res = list(trainingData_Y)
-    DataTime_res = list(DataTime)
+    data1_res = testingData_Y[data_training.columns.tolist()[-1]].values.tolist()
+    #DataTime_res = list(DataTime)
 
 
     for i in range(len(data1_res)):
         m = float(data1_res[i])
         data_res.append(m)
     for i in range(len(data_res)):
-        f.write('%10s,%10s,%10s\n' % (DataTime_res[i], data_res[i], pre_res[i]))
+        #f.write('%10s,%10s,%10s\n' % (DataTime_res[i], data_res[i], pre_res[i]))
+        f.write('%10s,%10s\n' % (data_res[i], pre_res[i]))
     f.close()
 
 def XGBoost_predict_cal(file_path_training, file_path_testining,file_out, trainModel_path):
