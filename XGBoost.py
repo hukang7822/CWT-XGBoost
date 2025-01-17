@@ -24,10 +24,10 @@ trainModel_path1 = ''
 def XGBoost_train_cal(file_path_training, file_out, trainModel_path, test_size):
     f = open(file_out, 'w')
 
-    data_training = pd.read_csv(file_path_training, sep=',', low_memory=False)  ###pandas读取数据，按照,间隔
-    data_training.replace('NAN', np.nan, inplace=True)  ###将Igor的NAN值替换成pandas的NaN
+    data_training = pd.read_csv(file_path_training, sep=',', low_memory=False)  
+    data_training.replace('NAN', np.nan, inplace=True)  
     data_training.dropna(axis=0, how='any', inplace=True)
-    num_column = data_training.shape[1]  ###数据列数
+    num_column = data_training.shape[1]  
 
     column_names = data_training.columns.tolist()[1:-1]
 
